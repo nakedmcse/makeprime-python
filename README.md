@@ -1,2 +1,2 @@
 # makeprime-python
-Python version of Fuds MakePrime
+Python port of Fuds MakePrime
