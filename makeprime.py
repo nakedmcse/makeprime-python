@@ -21,8 +21,12 @@ def divisible_by_small_primes(n: int) -> bool:
     return False
 
 # Generate Candidate
-def generate_candidate(digits: int) -> int:
+def generate_candidate(digits: int, want_random: bool) -> int:
     candidate = (10**(digits-1))+1
+    if want_random:
+        candidate = random.randint(1, 10**digits) - 1
+        if candidate % 2 == 0:
+            candidate += 1
     while divisible_by_small_primes(candidate):
         candidate += 2
     return candidate
@@ -54,9 +58,9 @@ def miller_rabin_prime_test(n, k = 10):
     return True
 
 # Find Prime
-def find_prime(digits: int, want_twin: bool) -> int:
+def find_prime(digits: int, want_twin: bool, want_random: bool) -> int:
     found = False
-    candidate = generate_candidate(digits)
+    candidate = generate_candidate(digits, want_random)
     while not found:
         if not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate) and not want_twin:
             found = True
@@ -71,13 +75,14 @@ def find_prime(digits: int, want_twin: bool) -> int:
 parser = argparse.ArgumentParser()
 parser.add_argument('digits', type=int, help='number of digits (must be 3 or more)')
 parser.add_argument('--twin', action="store_true", help='find consecutive primes')
+parser.add_argument('--random', action="store_true", help='use random starting point')
 args = parser.parse_args()
 
 if args.digits < 3:
     print('must have at least 3 digits')
     exit(1)
 
-prime = find_prime(args.digits, args.twin)
+prime = find_prime(args.digits, args.twin, args.random)
 print(prime)
 if args.twin:
     print(prime+2)
