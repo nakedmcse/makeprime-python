@@ -1,6 +1,7 @@
 # Makeprime Python Version
 import argparse
 import random
+import gmpy2
 
 # Divisible by small primes
 small_primes = [3, 5, 7, 11, 13, 17, 19, 23, 29,
@@ -46,11 +47,11 @@ def miller_rabin_prime_test(n, k = 10):
 
     for _ in range(k):
         a = random.randrange(2, n - 1)
-        x = pow(a, d, n)
+        x = gmpy2.powmod(a, d, n)
         if x == 1 or x == n - 1:
             continue
         for _ in range(s - 1):
-            x = pow(x, 2, n)
+            x = gmpy2.powmod(x, 2, n)
             if x == n - 1:
                 break
         else:
