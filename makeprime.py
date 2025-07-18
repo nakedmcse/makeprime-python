@@ -63,9 +63,9 @@ def find_prime(digits: int, want_twin: bool, want_random: bool) -> int:
     found = False
     candidate = generate_candidate(digits, want_random)
     while not found:
-        if not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate) and not want_twin:
+        if not want_twin and not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate):
             found = True
-        elif not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate) and want_twin and miller_rabin_prime_test(candidate+2):
+        elif want_twin and not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate) and miller_rabin_prime_test(candidate+2):
             found = True
         else:
             found = False
