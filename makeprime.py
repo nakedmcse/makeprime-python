@@ -68,7 +68,6 @@ def find_prime(digits: int, want_twin: bool, want_random: bool) -> int:
         elif want_twin and not divisible_by_small_primes(candidate) and miller_rabin_prime_test(candidate) and miller_rabin_prime_test(candidate+2):
             found = True
         else:
-            found = False
             candidate += 2
     return candidate
 
