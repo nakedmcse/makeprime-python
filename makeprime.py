@@ -2,6 +2,11 @@
 import argparse
 import random
 import gmpy2
+import signal
+import psutil
+import os
+from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
+from multiprocessing.spawn import freeze_support
 
 # Divisible by small primes
 small_primes = [3, 5, 7, 11, 13, 17, 19, 23, 29,
@@ -71,18 +76,59 @@ def find_prime(digits: int, want_twin: bool, want_random: bool) -> int:
             candidate += 2
     return candidate
 
+# Find Prime Multicore
+def find_prime_worker(c: int, twin: bool) -> int:
+    found = False
+    while not found:
+        if not twin and not divisible_by_small_primes(c) and miller_rabin_prime_test(c):
+            found = True
+        elif twin and not divisible_by_small_primes(c) and miller_rabin_prime_test(c) and miller_rabin_prime_test(c+2):
+            found = True
+        else:
+            c += 2
+    return c
+
+def find_prime_multi(digits: int, want_twin: bool, want_random: bool) -> int:
+    candidate = generate_candidate(digits, want_random)
+    num_procs = os.cpu_count()
+
+    pool = ProcessPoolExecutor(max_workers=num_procs)
+    futures = []
+    for _ in range(num_procs):
+        futures.append(pool.submit(find_prime_worker, candidate, want_twin))
+        candidate += 1_000_000_000
+
+    done, not_done = wait(futures, return_when=FIRST_COMPLETED)
+    pool.shutdown(wait=False)
+
+    return next(iter(done)).result()
+
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    try:
+        parent = psutil.Process(parent_pid)
+    except psutil.NoSuchProcess:
+        return
+    children = parent.children(recursive=True)
+    for process in children:
+        process.send_signal(sig)
+
 # Main program
-parser = argparse.ArgumentParser()
-parser.add_argument('digits', type=int, help='number of digits (must be 3 or more)')
-parser.add_argument('--twin', action="store_true", help='find consecutive primes')
-parser.add_argument('--random', action="store_true", help='use random starting point')
-args = parser.parse_args()
+if __name__ == '__main__':
+    freeze_support()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('digits', type=int, help='number of digits (must be 3 or more)')
+    parser.add_argument('--twin', action="store_true", help='find consecutive primes')
+    parser.add_argument('--random', action="store_true", help='use random starting point')
+    parser.add_argument('--multi', action="store_true", help='use multiple cores')
+    args = parser.parse_args()
 
-if args.digits < 3:
-    print('must have at least 3 digits')
-    exit(1)
+    if args.digits < 3:
+        print('must have at least 3 digits')
+        exit(1)
 
-prime = find_prime(args.digits, args.twin, args.random)
-print(prime)
-if args.twin:
-    print(prime+2)
+    prime = find_prime_multi(args.digits, args.twin, args.random) if args.multi else find_prime(args.digits, args.twin, args.random)
+    print(prime)
+    if args.twin:
+        print(prime+2)
+
+    if args.multi: kill_child_processes(os.getpid())

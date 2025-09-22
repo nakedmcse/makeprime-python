@@ -15,6 +15,7 @@ Number of digits must be greater than 3.
 Options:
 - `--twin`: Find consecutive prime numbers
 - `--random`: Use a random starting point and stride
+- `--multi`: Use multicore search
 
 ### Example
 ```
