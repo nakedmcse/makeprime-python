@@ -5,6 +5,7 @@ import gmpy2
 import signal
 import psutil
 import os
+import sys
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 from multiprocessing.spawn import freeze_support
 
@@ -127,6 +128,8 @@ if __name__ == '__main__':
         exit(1)
 
     prime = find_prime_multi(args.digits, args.twin, args.random) if args.multi else find_prime(args.digits, args.twin, args.random)
+    if args.digits > 4300:
+        sys.set_int_max_str_digits(args.digits)
     print(prime)
     if args.twin:
         print(prime+2)
